@@ -1,0 +1,78 @@
+##author: Simone Porcu
+# pyinstaller --onefile --noupx --windowed NetMonitor.py
+import os
+from tkinter import *
+import time
+from pythonping import ping
+import psutil
+import datetime
+
+root = Tk()
+
+variable = StringVar()
+
+
+def convert_to_megabit(value):
+    return 8 * (value / (2**20))
+
+
+def send_stat(value):
+    return convert_to_megabit(value)
+
+
+def recv_stat(value):
+    return convert_to_megabit(value)
+
+
+def update_label(flag):
+    start_button.config(state='disabled')
+    start_button.update()
+    old_value_sent = 0
+    old_value_recv = 0
+    filename1 = datetime.datetime.now().strftime("%Y-%m-%d")
+    name = str(filename1) + ".txt"
+    if os.path.exists(name):
+        file2write = open(name, 'a')  # append if already exists
+    else:
+        file2write = open(name, 'w')  # make a new file if not
+
+    while flag:
+        new_value_sent = psutil.net_io_counters().bytes_sent
+        new_value_recv = psutil.net_io_counters().bytes_recv
+        row = ""
+        p = ping('63.140.42.12', out=True)
+        if old_value_sent and old_value_recv:
+            up = round(send_stat(new_value_sent - old_value_sent),4)
+            dw = round(recv_stat(new_value_recv - old_value_recv),4)
+            ping_value = (str(p.rtt_avg_ms) + " ms")
+            row =str(datetime.datetime.now())+ " upload: " + str(up) + " Mbit" + "," + "download: " + str(
+                dw) + " Mbit" + ","  "ping: " + ping_value + "\n"
+
+            file2write.write(row)
+
+        p = ping('63.140.42.12', out=True)
+
+        old_value_sent = new_value_sent
+        old_value_recv = new_value_recv
+
+        time.sleep(0.5)
+        variable.set(str(row))
+        root.update()
+
+    file2write.close()
+    root.destroy()
+
+
+def kill():
+    root.destroy()
+
+canvas=Canvas(root, width=650, height=50)
+canvas.pack()
+your_label = Label(root, textvariable=variable)
+your_label.pack()
+start_button = Button(root, text="start", command=lambda: update_label(1))
+close_button = Button(root, text="stop", command=lambda: update_label(0))
+start_button.pack()
+close_button.pack()
+root.mainloop()
+
