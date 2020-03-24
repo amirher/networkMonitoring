@@ -2,15 +2,14 @@
 # pyinstaller --onefile --noupx --windowed NetMonitor.py
 import os
 from tkinter import *
-import time
 from pythonping import ping
 import psutil
 import datetime
+import pingparsing
 
 root = Tk()
 
 variable = StringVar()
-
 
 def convert_to_megabit(value):
     return 8 * (value / (2**20))
@@ -40,13 +39,17 @@ def update_label(flag):
         new_value_sent = psutil.net_io_counters().bytes_sent
         new_value_recv = psutil.net_io_counters().bytes_recv
         row = ""
-        p = ping('63.140.42.12', out=True)
+        transmitter = pingparsing.PingTransmitter()
+        transmitter.destination = "emea2cps.adobeconnect.com"
+        transmitter.count = 4
+        result = transmitter.ping()
+        strings=result.stdout.split("\r\n")
         if old_value_sent and old_value_recv:
             up = round(send_stat(new_value_sent - old_value_sent),4)
             dw = round(recv_stat(new_value_recv - old_value_recv),4)
             ping_value = (str(p.rtt_avg_ms) + " ms")
-            row =str(datetime.datetime.now())+ " upload: " + str(up) + " Mbit" + "," + "download: " + str(
-                dw) + " Mbit" + ","  "ping: " + ping_value + "\n"
+            row =str(datetime.datetime.now())+ " upload: " + str(up) + " Mbit" + ", download: " + str(
+                dw) + " Mbit" + ", ping: " + strings[12].split(",")[2] + " Packet Loss:" + strings[10]+"\n"
 
             file2write.write(row)
 
@@ -55,7 +58,6 @@ def update_label(flag):
         old_value_sent = new_value_sent
         old_value_recv = new_value_recv
 
-        time.sleep(0.5)
         variable.set(str(row))
         root.update()
 
@@ -66,7 +68,7 @@ def update_label(flag):
 def kill():
     root.destroy()
 
-canvas=Canvas(root, width=650, height=50)
+canvas=Canvas(root, width=650, height=80)
 canvas.pack()
 your_label = Label(root, textvariable=variable)
 your_label.pack()
