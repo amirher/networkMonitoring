@@ -2,12 +2,10 @@
 # pyinstaller --onefile --noupx --windowed NetMonitor.py
 import os
 from tkinter import *
-from pythonping import ping
 import psutil
 import datetime
 import pingparsing
-import subprocess
-import threading
+
 
 
 root = Tk()
@@ -52,13 +50,11 @@ def update_label(flag):
         if old_value_sent and old_value_recv:
             up = round(send_stat(new_value_sent - old_value_sent),4)
             dw = round(recv_stat(new_value_recv - old_value_recv),4)
-            ping_value = (str(p.rtt_avg_ms) + " ms")
             row =str(datetime.datetime.now())+ ", upload: " + str(up) + " Mbit" + ", download: " + str(
                 dw) + " Mbit" + ", ping: " + strings[12].split(",")[2] + " Packet Loss:" + strings[10]+"\n"
             fileRow=(str(datetime.datetime.now())+ "," + str(up) + "," + str(dw) + "," + strings[12].split(",")[2].split("=  ")[1].split("ms")[0] + "," + strings[10].split("(")[1].split("%")[0]+"\n")
             file2write.write(fileRow)
 
-        p = ping('63.140.42.12', out=True)
 
         old_value_sent = new_value_sent
         old_value_recv = new_value_recv
