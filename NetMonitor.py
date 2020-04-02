@@ -6,6 +6,9 @@ from pythonping import ping
 import psutil
 import datetime
 import pingparsing
+import subprocess
+import threading
+
 
 root = Tk()
 
@@ -24,16 +27,18 @@ def recv_stat(value):
 
 
 def update_label(flag):
+
     start_button.config(state='disabled')
     start_button.update()
     old_value_sent = 0
     old_value_recv = 0
     filename1 = datetime.datetime.now().strftime("%Y-%m-%d")
-    name = str(filename1) + ".txt"
+    name = str(filename1) + ".csv"
     if os.path.exists(name):
         file2write = open(name, 'a')  # append if already exists
     else:
         file2write = open(name, 'w')  # make a new file if not
+        file2write.write('date,upload,download,ping,packet-loss\n')
 
     while flag:
         new_value_sent = psutil.net_io_counters().bytes_sent
@@ -48,10 +53,10 @@ def update_label(flag):
             up = round(send_stat(new_value_sent - old_value_sent),4)
             dw = round(recv_stat(new_value_recv - old_value_recv),4)
             ping_value = (str(p.rtt_avg_ms) + " ms")
-            row =str(datetime.datetime.now())+ " upload: " + str(up) + " Mbit" + ", download: " + str(
+            row =str(datetime.datetime.now())+ ", upload: " + str(up) + " Mbit" + ", download: " + str(
                 dw) + " Mbit" + ", ping: " + strings[12].split(",")[2] + " Packet Loss:" + strings[10]+"\n"
-
-            file2write.write(row)
+            fileRow=(str(datetime.datetime.now())+ "," + str(up) + "," + str(dw) + "," + strings[12].split(",")[2].split("=  ")[1].split("ms")[0] + "," + strings[10].split("(")[1].split("%")[0]+"\n")
+            file2write.write(fileRow)
 
         p = ping('63.140.42.12', out=True)
 
